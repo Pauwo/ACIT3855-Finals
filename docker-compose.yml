@@ -183,6 +183,27 @@ services:
     networks:
       - mynetwork
 
+  anomaly_detector:
+      restart: always
+      build:
+        context: anomaly_detector
+        dockerfile: Dockerfile
+      environment:
+        CORS_ALLOW_ALL: no # Change to yes if you want to allow all requests
+      # ports:
+      #   - "8130:8130"
+      depends_on:
+        - storage
+        - processing
+        - receiver
+        - analyzer
+      volumes:
+        - ./config:/app/config
+        - ./logs:/app/logs
+        - ./data/anomaly_detector:/app/data 
+      networks:
+        - mynetwork
+
 volumes:
   zookeeper-data: 
 

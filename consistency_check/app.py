@@ -146,3 +146,4 @@ app.add_api("consistency_check.yaml", base_path="/consistency_check", strict_val
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8120)
+    event_type = None
