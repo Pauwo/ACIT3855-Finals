@@ -13,7 +13,7 @@ with open("./config/test/anomaly_detector/log_conf.yml", "r") as f:
     logging.config.dictConfig(LOG_CONFIG)
 
 # Load application configuration from app_config.yml
-with open("./config/test/anomaly_detector/app_conf.yml", "r") as f:
+with open("./config/test/anomaly_detector/app_config.yml", "r") as f:
     APP_CONFIG = yaml.safe_load(f.read())
 
 
@@ -127,6 +127,7 @@ def get_anomalies():
         # Filter anomalies by event type if provided
         if event_type:
             filtered_anomalies = [anomaly for anomaly in anomalies if anomaly.get("type") == event_type]
+            logger.debug(f"Filtered anomalies: {filtered_anomalies}")
         else:
             filtered_anomalies = anomalies
         
