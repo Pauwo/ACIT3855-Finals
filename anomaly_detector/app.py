@@ -79,7 +79,7 @@ def get_anomalies(event_type=None):
             filtered_anomalies = anomalies
         
         if not filtered_anomalies:
-            return {}, 204  # No content
+            return {}, 204
         
         return filtered_anomalies, 200
     except FileNotFoundError:
