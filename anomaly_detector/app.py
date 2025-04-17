@@ -99,8 +99,7 @@ def get_anomalies():
     When the "update" endpoint has completed the anomaly detection. Make sure you include how long
     the service took to retrieve the anomalies (
     INFO).
-    When a GET /anomalies request is received and the response returned (DEBUG)    
-    Make it easier to understand
+    When a GET /anomalies request is received and the response returned (DEBUG)
     """
     # analyzer_events_resp = httpx.get(f"{ANALYZER_URL}/events")
     # if analyzer_events_resp.status_code != 200:
@@ -137,8 +136,6 @@ def get_anomalies():
         return filtered_anomalies, 200
     except FileNotFoundError:
         return {"message": "Anomaly datastore not found."}, 404
-    except json.JSONDecodeError:
-        return {"message": "Invalid data in anomaly datastore."}, 404
 
 # Set up the Connexion application using the provided OpenAPI spec
 app = connexion.FlaskApp(__name__, specification_dir=".")
