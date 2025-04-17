@@ -24,6 +24,7 @@
         - /home/paulo/Finals/logs
         - /home/paulo/Finals/data/processing
         - /home/paulo/Finals/data/consistency_check
+        - /home/paulo/Finals/data/anomaly_detector
       become: true
 
     - name: Ensure event_stats.json has correct permissions
