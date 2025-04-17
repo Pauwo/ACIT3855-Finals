@@ -1,12 +1,12 @@
 ---
 - name: Deploy Services
-  hosts: lab12-vm
+  hosts: Finals-vm
   become: no
   tasks:
     - name: Clone/Pull Git Repo
       ansible.builtin.git:
-        repo: git@github.com:Pauwo/ACIT3855-Lab12.git
-        dest: /home/paulo/lab12
+        repo: git@github.com:Pauwo/ACIT3855-Finals.git
+        dest: /home/paulo/Finals
         accept_hostkey: yes
         version: main
         force: yes
@@ -20,15 +20,15 @@
         owner: nobody
         group: nogroup
       loop:
-        - /home/paulo/lab12/data
-        - /home/paulo/lab12/logs
-        - /home/paulo/lab12/data/processing
-        - /home/paulo/lab12/data/consistency_check
+        - /home/paulo/Finals/data
+        - /home/paulo/Finals/logs
+        - /home/paulo/Finals/data/processing
+        - /home/paulo/Finals/data/consistency_check
       become: true
 
     - name: Ensure event_stats.json has correct permissions
       ansible.builtin.file:
-        path: /home/paulo/lab12/data/processing/event_stats.json
+        path: /home/paulo/Finals/data/processing/event_stats.json
         state: touch  
         mode: "0666"  
         owner: nobody  
@@ -38,8 +38,8 @@
 
     - name: Copy all files from prod to test
       synchronize:
-        src: /home/paulo/acit3855/ACIT3855-Lab12/config/prod/
-        dest: /home/paulo/lab12/config/test/
+        src: /home/paulo/acit3855/ACIT3855-Finals/config/prod/
+        dest: /home/paulo/Finals/config/test/
         mode: push  # The push mode is for copying from the local machine to the remote server
         recursive: yes  # Ensure all files and subdirectories are copied
         delete: no 
@@ -48,7 +48,7 @@
 
     - name: Ensure Docker Compose is Running
       ansible.builtin.shell: |
-        cd /home/paulo/lab12
+        cd /home/paulo/Finals
         docker compose up -d --build
       args:
         executable: /bin/bash
