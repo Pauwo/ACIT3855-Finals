@@ -1,0 +1,13 @@
+version: 1
+datastore:
+  filename: ./data/data.json
+processing:
+  url: 'http://20.55.37.190/processing'
+analyzer:
+  url: 'http://20.55.37.190/analyzer'
+storage:
+  url: 'http://20.55.37.190/storage'
+events:
+  hostname: kafka
+  port: 29092
+  topic: events

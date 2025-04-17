@@ -1,0 +1,256 @@
+openapi: 3.0.0
+info:
+  description: This API provides audit info
+  version: "1.0.0"
+  title: Audit API
+  contact:
+    email: rhernandez35@my.bcit.ca
+
+paths:
+  /flights/schedule:
+    get:
+      summary: Gets a flight schedule event from the Kafka queue
+      operationId: app.get_flight_schedule
+      description: Retrieves a flight schedule event from the event store based on a zero-based index.
+      parameters:
+        - name: index
+          in: query
+          description: Gets the flight schedule event at the index in the event store.
+          schema:
+            type: integer
+            example: 10
+      responses:
+        '200':
+          description: Successfully returned a flight schedule event.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlightSchedule'
+        '400':
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /passenger/checkin:
+    get:
+      summary: Gets a passenger check-in event from the Kafka queue
+      operationId: app.get_passenger_checkin
+      description: Retrieves a passenger check-in event from the event store based on a zero-based index.
+      parameters:
+        - name: index
+          in: query
+          description: Gets the passenger check-in event at the index in the event store.
+          schema:
+            type: integer
+            example: 20
+      responses:
+        '200':
+          description: Successfully returned a passenger check-in event.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PassengerCheckin'
+        '400':
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /stats:
+    get:
+      summary: Gets the event stats
+      operationId: app.get_event_stats
+      description: Retrieves the statistics of the airport events from the Kafka queue.
+      responses:
+        '200':
+          description: Successfully returned event statistics.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stats'
+
+  /flights/schedule/random:
+    get:
+      summary: Gets a random flight schedule event
+      operationId: app.get_random_flight_schedule
+      responses:
+        '200':
+          description: Successfully returned random flight schedule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlightSchedule'
+        '404':
+          description: No events found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /passenger/checkin/random:
+    get:
+      summary: Gets a random passenger check-in event
+      operationId: app.get_random_passenger_checkin
+      responses:
+        '200':
+          description: Successfully returned random check-in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PassengerCheckin'
+        '404':
+          description: No events found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /events:
+    get:
+      summary: Gets a list of events
+      operationId: app.get_events
+      description: Retrieves a list of event IDs and trace IDs from the database.
+      responses:
+        '200':
+          description: Successfully returned a list of events.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    event_id:
+                      type: string
+                      description: The event identifier.
+                    trace_id:
+                      type: integer
+                      description: The trace identifier.
+                    type:
+                      type: string
+                      description: The type of event.
+                      example: flight_schedule
+        '404':
+          description: No events found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+components:
+  schemas:
+    FlightSchedule:
+      type: object
+      required:
+        - flight_id
+        - flight_status
+        - flight_duration
+        - flight_departure
+        - trace_id
+      properties:
+        flight_id:
+          type: string
+          format: uuid
+          example: abc123-def456
+        flight_status:
+          type: string
+          example: "On-Time"
+        flight_duration:
+          type: integer
+          example: 120
+        flight_departure:
+          type: string
+          format: date-time
+          example: "2025-01-15T08:30:00Z"
+        trace_id:
+          type: integer
+          example: 123456789
+    PassengerCheckin:
+      type: object
+      required:
+        - checkin_id
+        - flight_id
+        - luggage_weight
+        - checkin_timestamp
+        - trace_id
+      properties:
+        checkin_id:
+          type: string
+          format: uuid
+          example: xyz789-ghi101
+        flight_id:
+          type: string
+          format: uuid
+          example: abc123-def456
+        luggage_weight:
+          type: number
+          example: 25.5
+        checkin_timestamp:
+          type: string
+          format: date-time
+          example: "2025-01-15T06:45:00Z"
+        trace_id:
+          type: integer
+          example: 987654321
+    # Stats:
+    #   type: object
+    #   required:
+    #     - num_flight_schedules
+    #     - num_passenger_checkins
+    #   properties:
+    #     num_flight_schedules:
+    #       type: integer
+    #       example: 10
+    #     num_passenger_checkins:
+    #       type: integer
+    #       example: 5
+    Stats:
+      type: object
+      required:
+        - num_flight_schedules
+        - num_passenger_checkins
+        - last_updated
+      properties:
+        num_flight_schedules:
+          type: integer
+          example: 10
+        num_passenger_checkins:
+          type: integer
+          example: 5
+        last_updated:
+          type: string
+          format: date-time
+          example: "2024-03-15T14:30:00Z"

@@ -1,0 +1,105 @@
+openapi: 3.0.0
+info:
+  title: Airport Flight Management and Monitoring System
+  description: 'This is an application designed to manage and monitor airport operations, focusing on flight scheduling and passenger check-in data.'
+  contact:
+    email: rhernandez35@my.bcit.ca
+  version: 1.0.0
+paths:
+  /flights/schedule:
+    post:
+      summary: reports flight schedules
+      description: Adds or updates flight schedule details in the system
+      operationId: app.report_flight_schedules
+      requestBody:
+        description: Flight schedule details to add or update.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlightSchedule'
+      responses:
+        "201":
+          description: Flight schedule successfully updated.
+        "400":
+          description: Invalid input, object invalid.
+  /passenger/checkin:
+    post:
+      summary: records passenger check-ins
+      description: Adds a new passenger check-in record to the system.
+      operationId: app.record_passenger_checkin
+      requestBody:
+        description: Passenger check-in details.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PassengerCheckin'
+      responses:
+        "201":
+          description: Check-in successfully recorded.
+        "400":
+          description: Invalid input, object invalid.
+components:
+  schemas:
+    FlightSchedule:
+      required:
+        - flight_id
+        - flight_status
+        - flight_duration
+        - flight_departure
+        - trace_id
+      type: object
+      properties:
+        flight_id:
+          type: string
+          description: Unique identifier for the flight.
+          format: uuid
+          example: abc123-def456
+        flight_status:
+          type: string
+          description: Current status of the flight (e.g., "On-Time", "Delayed").
+          example: "On-Time"
+        flight_duration:
+          type: integer
+          description: Duration of the flight in minutes.
+          example: 120
+        flight_departure:
+          type: string
+          description: Scheduled departure time.
+          format: date-time
+          example: 2025-01-15T08:30:00Z
+        trace_id:
+          type: integer
+          description: Unique identifier for the trace of the flight.
+          example: 123456789
+    PassengerCheckin:
+      required:
+        - checkin_id
+        - flight_id
+        - luggage_weight
+        - checkin_timestamp
+        - trace_id
+      type: object
+      properties:
+        checkin_id:
+          type: string
+          description: Unique identifier for the check-in event.
+          format: uuid
+          example: xyz789-ghi101
+        flight_id:
+          type: string
+          description: Unique identifier for the flight the passenger is checking in for.
+          format: uuid
+          example: abc123-def456
+        luggage_weight:
+          type: number
+          description: Weight of the passenger's luggage in kilograms.
+          example: 25.5
+        checkin_timestamp:
+          type: string
+          description: Timestamp of when the check-in occurred.
+          format: date-time
+          example: 2025-01-15T06:45:00Z
+        trace_id:
+          type: integer
+          description: Unique identifier for the trace of the check-in event.
+          example: 987654321

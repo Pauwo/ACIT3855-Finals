@@ -1,0 +1,186 @@
+openapi: 3.0.0
+info:
+  title: Airport Flight Management and Monitoring System
+  description: 'This is an application designed to manage and monitor airport operations, focusing on flight scheduling and passenger check-in data.'
+  contact:
+    email: rhernandez35@my.bcit.ca
+  version: 1.0.0
+paths:
+  /flights/schedule:
+    get:
+      summary: Retrieves flight schedules in a given time range
+      description: Returns a list of flight schedules that occurred within the specified time range.
+      operationId: app.get_flight_schedules
+      parameters:
+        - name: start_timestamp
+          in: query
+          required: true
+          description: The start of the time range.
+          schema:
+            type: string
+            format: date-time
+            example: "2025-01-15T00:00:00Z"
+        - name: end_timestamp
+          in: query
+          required: true
+          description: The end of the time range.
+          schema:
+            type: string
+            format: date-time
+            example: "2025-01-15T23:59:59Z"
+      responses:
+        "200":
+          description: A list of flight schedules in the given time range.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FlightSchedule'
+        "400":
+          description: Invalid timestamp format.
+        "500":
+          description: Server error.
+
+  /passenger/checkin:
+    get:
+      summary: Retrieves passenger check-ins in a given time range
+      description: Returns a list of passenger check-ins that occurred within the specified time range.
+      operationId: app.get_passenger_checkins
+      parameters:
+        - name: start_timestamp
+          in: query
+          required: true
+          description: The start of the time range.
+          schema:
+            type: string
+            format: date-time
+            example: "2025-01-15T00:00:00Z"
+        - name: end_timestamp
+          in: query
+          required: true
+          description: The end of the time range.
+          schema:
+            type: string
+            format: date-time
+            example: "2025-01-15T23:59:59Z"
+      responses:
+        "200":
+          description: A list of passenger check-ins in the given time range.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PassengerCheckin'
+        "400":
+          description: Invalid timestamp format.
+        "500":
+          description: Server error.
+  /count:
+    get:
+      summary: Retrieves the count of records in the database for each event type.
+      operationId: app.get_count
+      responses:
+        '200':
+          description: A JSON object with counts for each event type.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  flight_schedule:
+                    type: integer
+                    example: 10
+                  passenger_checkin:
+                    type: integer
+                    example: 5
+  /events:
+    get:
+      summary: Retrieves a list of event IDs and trace IDs from the database.
+      operationId: app.get_events
+      responses:
+        '200':
+          description: A list of events.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    event_id:
+                      type: string
+                      description: The event identifier.
+                    trace_id:
+                      type: integer
+                      description: The trace identifier.
+                    type:
+                      type: string
+                      description: The type of event.
+                      example: flight_schedule
+components:
+  schemas:
+    FlightSchedule:
+      required:
+        - flight_id
+        - flight_status
+        - flight_duration
+        - flight_departure
+        - trace_id
+      type: object
+      properties:
+        flight_id:
+          type: string
+          description: Unique identifier for the flight.
+          format: uuid
+          example: abc123-def456
+        flight_status:
+          type: string
+          description: Current status of the flight (e.g., "On-Time", "Delayed").
+          example: "On-Time"
+        flight_duration:
+          type: integer
+          description: Duration of the flight in minutes.
+          example: 120
+        flight_departure:
+          type: string
+          description: Scheduled departure time.
+          format: date-time
+          example: 2025-01-15T08:30:00Z
+        trace_id:
+          type: integer
+          description: Unique identifier for the trace of the flight.
+          example: 123456789
+    PassengerCheckin:
+      required:
+        - checkin_id
+        - flight_id
+        - luggage_weight
+        - checkin_timestamp
+        - trace_id
+      type: object
+      properties:
+        checkin_id:
+          type: string
+          description: Unique identifier for the check-in event.
+          format: uuid
+          example: xyz789-ghi101
+        flight_id:
+          type: string
+          description: Unique identifier for the flight the passenger is checking in for.
+          format: uuid
+          example: abc123-def456
+        luggage_weight:
+          type: number
+          description: Weight of the passenger's luggage in kilograms.
+          example: 25.5
+        checkin_timestamp:
+          type: string
+          description: Timestamp of when the check-in occurred.
+          format: date-time
+          example: 2025-01-15T06:45:00Z
+        trace_id:
+          type: integer
+          description: Unique identifier for the trace of the check-in event.
+          example: 987654321

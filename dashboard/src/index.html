@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="./logo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="ACIT3855 statistics application" />
+    <script src="updateStats.js"></script>
+    <img src="./logo.png" alt="System Logo" id="logo">
+    <title>ACIT3855 - I changed it</title>
+</head>
+
+<body>
+    <main id="main">
+        <div id="header">
+            <h1>Dashboard</h1>
+        </div>
+        <h5 id="last-updated">Last update: <span id="last-updated-value">N/A</span></h5>
+        <div id="messages"></div>
+        <h2>Statistics</h2>
+        <div id="statistics">
+            <div id="processing">
+                <code id="processing-stats">Placeholder value - processing stats should appear here</code>
+            </div>
+            <div id="analyzer">
+                <code id="analyzer-stats">Placeholder value - analyzer stats should appear here</code>
+            </div>
+        </div>
+        <h2>Analyzer events</h2>
+        <div id="analyzer">
+            <div>
+                <h3>Flight event</h3>
+                <code id="event-flight">
+                </code>
+            </div>
+            <div>
+                <h3>Passenger event</h3>
+                <code id="event-passenger">
+                </code>
+            </div>
+        </div>
+        <h2>Consistency Checks</h2>
+        <form id="consistency-form">
+            <button type="submit">Run Consistency Check</button>
+        </form>
+        <div id="consistency-results">
+            <code id="consistency-stats">No consistency check results yet.</code>
+        </div>
+        <!-- <div id="analyzer-events">
+            <div class="event-card">
+              <h3>Flight event</h3>
+              <code id="event-flight"></code>
+            </div>
+            <div class="event-card">
+              <h3>Passenger event</h3>
+              <code id="event-passenger"></code>
+            </div>
+        </div> -->
+    </main>
+</body>
+
+</html>

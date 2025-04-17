@@ -1,0 +1,13 @@
+version: 1
+datastore:
+  user: "skibidi"
+  password: "Passw0rd"
+  hostname: "db"
+  port: 3306
+  db: "skibididb"
+
+# Kafka configuration
+events:
+  hostname: kafka
+  port: 29092
+  topic: events

@@ -1,0 +1,191 @@
+services:
+  receiver:
+    restart: always
+    build:
+      context: receiver
+      dockerfile: Dockerfile
+    environment:
+      CORS_ALLOW_ALL: no # Change to yes if you want to allow all requests
+    # ports:
+    #   - "8080:8080"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./config:/app/config
+      - ./logs:/app/logs
+    networks:
+      - mynetwork
+    deploy:
+      replicas: 3
+
+
+  processing:
+    build:
+      context: processing
+      dockerfile: Dockerfile
+    environment:
+      CORS_ALLOW_ALL: no # Change to yes if you want to allow all requests
+    # ports:
+    #   - "8100:8100"
+    depends_on:
+      storage:
+        condition: service_started
+    volumes:
+      - ./config:/app/config
+      - ./logs:/app/logs
+      - ./data/processing:/app/data 
+    networks:
+      - mynetwork
+
+
+  analyzer:
+    build:
+      context: analyzer
+      dockerfile: Dockerfile
+    environment:
+      CORS_ALLOW_ALL: no # Change to yes if you want to allow all requests
+    # ports:
+    #   - "8110:8110"
+    depends_on:
+      - processing
+    volumes:
+      - ./config:/app/config
+      - ./logs:/app/logs
+    networks:
+      - mynetwork
+
+
+  db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+      MYSQL_DATABASE: 'skibididb'      
+      MYSQL_USER: 'skibidi'
+      MYSQL_PASSWORD: 'Passw0rd'
+    healthcheck:
+      test: ["CMD", "mysql", "-u", "skibidi", "-pPassw0rd", "-e", "SHOW DATABASES;"]
+      interval: 15s
+      retries: 5
+      start_period: 10s
+      timeout: 10s
+    # ports:
+    #   - '3306:3306'
+    volumes:
+      - ./data/database:/var/lib/mysql  # Bind mount for MySQL data
+    networks:
+      - mynetwork
+
+
+  storage:
+    restart: always
+    build:
+      context: storage
+      dockerfile: Dockerfile
+    # ports:
+    #   - "8090:8090"
+    environment:
+      CORS_ALLOW_ALL: no # Change to yes if you want to allow all requests
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      receiver:
+        condition: service_started
+    volumes:
+      - ./config:/app/config
+      - ./logs:/app/logs
+    networks:
+      - mynetwork
+
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+    networks:
+      - mynetwork
+
+
+  kafka:
+    image: wurstmeister/kafka
+    depends_on:
+      - zookeeper
+    hostname: kafka
+    #ports:
+    #  - "9092:9092"
+    environment:
+      KAFKA_CREATE_TOPICS: "events:1:1" 
+      KAFKA_ADVERTISED_HOST_NAME: kafka 
+      KAFKA_LISTENERS: INSIDE://:29092,OUTSIDE://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:29092,OUTSIDE://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    healthcheck:
+      test: nc -z localhost 29092 || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    volumes:
+#      - ./data/kafka:/var/lib/kafka/data  # Bind mount for Kafka
+      - ./data/kafka:/kafka
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - mynetwork
+    command: >
+      sh -c "rm -f ./kafka/kafka-logs-kafka/meta.properties && start-kafka.sh"
+
+  # dashboard:
+  #   build: ./dashboard
+  #   ports:
+  #     - "80:80"
+  #   depends_on:
+  #     - analyzer
+  #     - processing
+
+  dashboard:
+    image: nginx:latest
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro  # Mount custom nginx.conf
+      - ./dashboard/src:/usr/share/nginx/html  # Serve the dashboard UI files
+    depends_on:
+      - analyzer
+      - processing
+      - receiver
+      - storage
+    networks:
+      - mynetwork
+
+  consistency_check:
+    restart: always
+    build:
+      context: consistency_check
+      dockerfile: Dockerfile
+    environment:
+      CORS_ALLOW_ALL: no # Change to yes if you want to allow all requests
+    depends_on:
+      - analyzer
+      - processing
+      - storage
+    # ports:
+    #   - "8120:8120"
+    volumes:
+      - ./config:/app/config
+      - ./logs:/app/logs
+      - ./data/consistency_check:/app/data 
+    networks:
+      - mynetwork
+
+volumes:
+  zookeeper-data: 
+
+networks:
+  mynetwork:
+    driver: bridge
