@@ -29,30 +29,9 @@ logger = logging.getLogger('basicLogger')
 def update_anomalies():
     """
     PUT /update
-    reads from the Kafka queue (from the beginning, every time)
-    finds events with anomalies
-    updates the JSON datastore from scratch with anomaly data (= the JSON file is overwritten every time
-    the endpoint is accessed)
-    The endpoint returns an HTTP response that contains the number of anomalies detected in the queue. See
-    the OpenAPI YAML specification for more details.
-    My anomaly service will detect all flight schedule flight duration that are too low (for example, below 15). It will also detect passenger check luggage weights that are too high (for example, about 200).
-    Logging
-    At minimum, the following shall be logged:
-    on startup of the service: log the threshold values for anomalies (
-    When accessing the "update" endpoint (
-    INFO)
-    DEBUG)
-    When an anomaly is detected and added to the JSON file, including the value detected and threshold
-    exceeded (
-    DEBUG)
-    When the "update" endpoint has completed the anomaly detection. Make sure you include how long
-    the service took to retrieve the anomalies (
-    INFO).
-    When a 
-    GET /anomalies request is received and the response returned (
-    Integration
-    DEBUG)
     """
+    logger.debug("Received PUT request for anomaly update")
+
     start_time = time.time()
     logger.info("Starting anomaly update process")
     try:
@@ -65,13 +44,12 @@ def update_anomalies():
         anomalies = []
         for event in analyzer_events:
             if event.get("type") == "flight_schedule" and event.get("flight_duration") < 15:
-                logger.debug(f"Anomaly detected: {event}")
+                logger.debug(f"Anomaly detected: {event} as it has a flight duration less than 15 minutes")
                 anomalies.append(event)
             elif event.get("type") == "passenger_checkin" and event.get("luggage_weight") > 200:
-                logger.debug(f"Anomaly detected: {event}")  
+                logger.debug(f"Anomaly detected: {event} as it exceeds the luggage weight limit of 200")  
                 anomalies.append(event)
         
-        # Write the anomalies to the JSON datastore
         with open(JSON_DATASTORE, "w") as f:
             json.dump(anomalies, f, indent=4)
         
@@ -83,47 +61,17 @@ def update_anomalies():
         return {"message": str(e)}, 500
 
 
-def get_anomalies():
+def get_anomalies(event_type=None):
     """
     The GET /anomalies endpoint defined in the OpenAPI spec returns a list of anomalies. The endpoint allows to filter by event type (i.e. show anomalies for "EVENT1" only, or "EVENT2" only) using a parameter in the query string (URL).
-    If the event type provided is invalid, return 400.
-    If the event type is not provided, show all anomalies.
-    The event type is optional in the OpenAPI spec.
-    Make sure you use a default value for the argument (use the following signature for your endpoint function: def get_anomalies(event_type=None)).
-    If the event type is not provided in the URL, the function will use the default value provided in the signature.
-    If there are no anomalies to return, return an empty response with code 204.
-    If there are issues with the anomaly datastore (missing or invalid data), return 404.
-    At minimum, the following shall be logged: on startup of the service: log the threshold values for anomalies (
-    When accessing the "update" endpoint (INFO) DEBUG)
-    When an anomaly is detected and added to the JSON file, including the value detected and threshold exceeded (DEBUG)
-    When the "update" endpoint has completed the anomaly detection. Make sure you include how long
-    the service took to retrieve the anomalies (
-    INFO).
-    When a GET /anomalies request is received and the response returned (DEBUG)
     """
-    # analyzer_events_resp = httpx.get(f"{ANALYZER_URL}/events")
-    # if analyzer_events_resp.status_code != 200:
-    #     return {"message": "Failed to retrieve analyzer events"}, 500
-    # analyzer_events = analyzer_events_resp.json()
-
-    # for event in analyzer_events:
-    #     if event.get("type") == "flight_schedule" and event.get("flight_duration") < 15:
-    #         logger.debug(f"Anomaly detected: {event}")
-    #     elif event.get("type") == "passenger_checkin" and event.get("luggage_weight") > 200:
-    #         logger.debug(f"Anomaly detected: {event}")
-
-
-
     logger.debug("Received GET request for anomalies")
-    # Get the event type from the query parameters
-    event_type = None
     if event_type not in ["flight_schedule", "passenger_checkin", None]:
         return {"message": "Invalid event type provided."}, 400
     try:
         with open(JSON_DATASTORE, "r") as f:
             anomalies = json.load(f)
         
-        # Filter anomalies by event type if provided
         if event_type:
             filtered_anomalies = [anomaly for anomaly in anomalies if anomaly.get("type") == event_type]
             logger.debug(f"Filtered anomalies: {filtered_anomalies}")
@@ -131,15 +79,17 @@ def get_anomalies():
             filtered_anomalies = anomalies
         
         if not filtered_anomalies:
-            return {}, 204 
+            return {}, 204  # No content
         
         return filtered_anomalies, 200
     except FileNotFoundError:
         return {"message": "Anomaly datastore not found."}, 404
+    
 
 # Set up the Connexion application using the provided OpenAPI spec
 app = connexion.FlaskApp(__name__, specification_dir=".")
 app.add_api("anomaly.yaml", base_path="/anomaly_detection", strict_validation=True, validate_responses=True)
 
 if __name__ == "__main__":
+    logger.info(f"Threshold values for anomalies: luggage_weight=200, flight_duration=15")
     app.run(host="0.0.0.0", port=8130)

@@ -146,28 +146,3 @@ app.add_api("consistency_check.yaml", base_path="/consistency_check", strict_val
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8120)
-
-
-    # logger.debug("Received GET request for anomalies")
-    # event_type = None
-    # if event_type not in ["flight_schedule", "passenger_checkin", None]:
-    #     return {"message": "Invalid event type provided."}, 400
-    # try:
-    #     with open(JSON_DATASTORE, "r") as f:
-    #         anomalies = json.load(f)
-        
-    #     # Filter anomalies by event type if provided
-    #     if event_type:
-    #         filtered_anomalies = [anomaly for anomaly in anomalies if anomaly.get("type") == event_type]
-    #         logger.debug(f"Filtered anomalies: {filtered_anomalies}")
-    #     else:
-    #         filtered_anomalies = anomalies
-        
-    #     if not filtered_anomalies:
-    #         return {}, 204 
-        
-    #     return filtered_anomalies, 200
-    # except FileNotFoundError:
-    #     return {"message": "Anomaly datastore not found."}, 404
-
-
